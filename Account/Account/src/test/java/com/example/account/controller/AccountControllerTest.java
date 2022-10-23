@@ -2,12 +2,12 @@ package com.example.account.controller;
 
 import com.example.account.domain.Account;
 import com.example.account.dto.AccountDto;
+import com.example.account.dto.AccountInfo;
 import com.example.account.dto.CreateAccount;
 import com.example.account.dto.DeleteAccount;
-import com.example.account.type.AccountStatus;
 import com.example.account.service.AccountService;
 import com.example.account.service.RedisTestService;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.example.account.type.AccountStatus;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +17,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -50,14 +52,14 @@ class AccountControllerTest {
                         .registeredAt(LocalDateTime.now())
                         .unRegisteredAt(LocalDateTime.now())
                         .build()
-                        );
+                );
         //when
         //then
         mockMvc.perform(post("/account")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(
-                        new CreateAccount.Request(1L, 100L)
-                )))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                new CreateAccount.Request(1L, 100L)
+                        )))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.userId").value(1))
                 .andExpect(jsonPath("$.accountNumber").value("1234567890"))
@@ -89,19 +91,33 @@ class AccountControllerTest {
     }
 
     @Test
-    void successGetAccount() throws Exception {
+    void successGetAccountsByUserId() throws Exception {
         //given
-        given(accountService.getAccount(anyLong()))
-                .willReturn(Account.builder()
-                        .accountNumber("3456")
-                        .accountStatus(AccountStatus.IN_USE)
-                        .build());
+        List<AccountInfo> accountInfos =
+                Arrays.asList(
+                        AccountInfo.builder()
+                                .accountNumber("1234567890")
+                                .balance(1000L).build(),
+                        AccountInfo.builder()
+                                .accountNumber("1111111111")
+                                .balance(1000L).build(),
+                        AccountInfo.builder()
+                                .accountNumber("1232222222")
+                                .balance(1000L).build()
+                );
+        given(accountService.getAccountsByUserId(anyLong()))
+                .willReturn(accountInfos);
         //when
         //then
-        mockMvc.perform(get("/account/876"))
+        mockMvc.perform(get("/account?user_id=1"))
                 .andDo(print())
-                .andExpect(jsonPath("$.accountNumber").value("3456"))
-                .andExpect(jsonPath("$.accountStatus").value("IN_USE"))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].accountNumber").value("1234567890"))
+                .andExpect(jsonPath("$[0].balance").value(1000L))
+                .andExpect(jsonPath("$[1].accountNumber").value("1111111111"))
+                .andExpect(jsonPath("$[1].balance").value(1000L))
+                .andExpect(jsonPath("$[2].accountNumber").value("1232222222"))
+                .andExpect(jsonPath("$[2].balance").value(1000L));
+
     }
 }
