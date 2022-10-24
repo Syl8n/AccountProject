@@ -10,6 +10,7 @@ import com.example.account.repository.AccountUserRepository;
 import com.example.account.repository.TransactionRepository;
 import com.example.account.type.AccountStatus;
 import com.example.account.type.ErrorCode;
+import com.example.account.type.TransactionType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -437,5 +438,53 @@ class TransactionServiceTest {
                         "transactionId", "1234567890", 1000L));
         //then
         assertEquals(ErrorCode.TOO_OLD_ORDER_TO_CANCEL, exception.getErrorCode());
+    }
+
+    @Test
+    void successQueryTransaction() {
+        //given
+        AccountUser user = AccountUser.builder()
+                .id(12L)
+                .name("Pobi").build();
+        Account account = Account.builder()
+                .id(1L)
+                .accountUser(user)
+                .accountStatus(AccountStatus.IN_USE)
+                .balance(10000L)
+                .accountNumber("1000000012").build();
+
+        Transaction transaction = Transaction.builder()
+                .account(account)
+                .transactionType(USE)
+                .transactionResultType(SUCCESS)
+                .transactionId("transactionId")
+                .transactedAt(LocalDateTime.now().minusYears(1).minusDays(1))
+                .amount(1000L)
+                .balanceSnapshot(9000L)
+                .build();
+
+        given(transactionRepository.findByTransactionId(anyString()))
+                .willReturn(Optional.of(transaction));
+        //when
+        TransactionDto transactionDto = transactionService.queryTransaction("trxId");
+        //then
+        assertEquals(USE, transactionDto.getTransactionType());
+        assertEquals(SUCCESS, transactionDto.getTransactionResultType());
+        assertEquals(1000L, transactionDto.getAmount());
+        assertEquals("transactionId", transactionDto.getTransactionId());
+    }
+
+    @Test
+    @DisplayName("해당 거래 없음 - 거래 조회 실패")
+    void query_TransactionNotFound() {
+        //given
+        given(transactionRepository.findByTransactionId(anyString()))
+                .willReturn(Optional.empty());
+
+        //when
+        AccountException exception = assertThrows(AccountException.class,
+                () -> transactionService.queryTransaction("transactionId"));
+        //then
+        assertEquals(ErrorCode.TRANSACTION_NOT_FOUND, exception.getErrorCode());
     }
 }
