@@ -4,7 +4,7 @@ Content-Type: application/json
 
 {
   "userId" : 1,
-  "accountNumber" :  "1000000000",
+  "accountNumber" :  "4040026797",
   "amount" : 1000
 }
 
@@ -19,4 +19,4 @@ Content-Type: application/json
 }
 
 ### query transaction
-GET http://localhost:8080/transaction/transactionId
+GET http://localhost:8080/transaction/df8684fb52dc434c938ea09a0ea50cb7
