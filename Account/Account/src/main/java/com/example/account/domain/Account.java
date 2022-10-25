@@ -5,8 +5,6 @@ import com.example.account.type.AccountStatus;
 import com.example.account.type.ErrorCode;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
@@ -23,6 +21,7 @@ public class Account extends BaseEntity {
 
     @ManyToOne
     private AccountUser accountUser;
+
     private String accountNumber;
 
     @Enumerated(EnumType.STRING)

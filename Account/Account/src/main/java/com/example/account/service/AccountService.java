@@ -38,9 +38,7 @@ public class AccountService {
 
         validateCreateAccount(accountUser);
 
-        String newAccountNumber = accountRepository.findFirstByOrderByIdDesc()
-                .map(account -> (Integer.parseInt(account.getAccountNumber())) + 1 + "")
-                .orElse("1000000000");
+        String newAccountNumber = generateAccountNumber();
 
         return AccountDto.fromEntity(accountRepository.save(Account.builder()
                 .accountUser(accountUser)
@@ -50,6 +48,17 @@ public class AccountService {
                 .registeredAt(LocalDateTime.now())
                 .build())
         );
+    }
+
+    @Transactional
+    public String generateAccountNumber() {
+        String s = "";
+        while(s.length() != 10){
+            s = String.valueOf((long)(Math.random() * 10000000000.0));
+        }
+        return accountRepository.findByAccountNumber(s)
+                .map(account -> (generateAccountNumber()))
+                .orElse(s);
     }
 
     private void validateCreateAccount(AccountUser accountUser) {
